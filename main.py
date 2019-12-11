@@ -6,9 +6,9 @@ from sklearn import neighbors
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
-# użyć wilcoxon
+# TODO: wilcoxon
 # https://github.com/w4k2/benchmark_datasets
-FEATURES = 10  # zbadać dla różnych ilości cech
+FEATURES = 5
 FOLDS = 5
 DATASET_PATH = 'datasets/spam_sms.csv'
 
@@ -25,9 +25,17 @@ def preprocess_data(dataset):
     X = vectorizer.fit_transform(X, y).toarray()
     print('Vectorized shape: {}'.format(X.shape))
 
+    # df = pd.DataFrame(X, y)
+    # print(df)
+    # df.to_csv('datasets/sms_spam_all_features.csv')
+
     print('Feature reduction..')
     pca = PCA(n_components=FEATURES, copy=False)
     X = pca.fit_transform(X)
+
+    # df = pd.DataFrame(X, y)
+    # print(df)
+    # df.to_csv('datasets/sms_spam_{}_features.csv'.format(FEATURES))
 
     print('Scaling..')
     scaler = preprocessing.StandardScaler()
@@ -40,7 +48,9 @@ def preprocess_data(dataset):
 
 def predict(X, y, clf, k=6):
     skf = model_selection.StratifiedKFold(n_splits=k)
-    scores = np.zeros(k)
+    f1_scores = []
+    precision_scores = []
+    recall_scores = []
     for fold, (train, test) in enumerate(skf.split(X, y)):
         print('Fold: {}/{}'.format(fold + 1, k))
         X_train, X_test = X[train], X[test]
@@ -49,12 +59,15 @@ def predict(X, y, clf, k=6):
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
 
-        score = metrics.accuracy_score(y_test, y_pred)  # f_score, precision, recall
+        f1_score = metrics.f1_score(y_test, y_pred, pos_label='spam', average='binary')
+        precision = metrics.precision_score(y_test, y_pred, pos_label='spam')
+        recall = metrics.recall_score(y_test, y_pred, pos_label='spam')
 
-        print('-- accuracy: {}'.format(score))
-        scores[fold] = score
+        f1_scores.append(f1_score)
+        precision_scores.append(precision)
+        recall_scores.append(recall)
 
-    return np.mean(scores)
+    return np.mean(f1_scores), np.mean(precision_scores), np.mean(recall_scores)
 
 
 def main():
@@ -63,11 +76,13 @@ def main():
 
     X, y = preprocess_data(dataset)
     result = predict(X, y, knn, FOLDS)
-    print('Accuracy: {:2f}%'.format(result * 100))
+    print('F1 Score: {:2f}'.format(result[0]))
+    print('Precision: {:2f}'.format(result[1]))
+    print('Recall: {:2f}'.format(result[2]))
+    el = [FEATURES]
+    el.extend(result)
+    print('{},{},{},{}'.format(*el))
 
 
 if __name__ == '__main__':
     main()
-
-# dataset - mniejszosciowa musi być pozytywna
-# zbiór : 5574 elementy, 747 spam, 4827 ham.
