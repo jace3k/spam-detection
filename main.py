@@ -6,9 +6,10 @@ from sklearn import neighbors
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-FEATURES = 100
-FOLDS = 10
+# użyć wilcoxon
+# https://github.com/w4k2/benchmark_datasets
+FEATURES = 10  # zbadać dla różnych ilości cech
+FOLDS = 5
 DATASET_PATH = 'datasets/spam_sms.csv'
 
 
@@ -48,7 +49,8 @@ def predict(X, y, clf, k=6):
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
 
-        score = metrics.accuracy_score(y_test, y_pred)
+        score = metrics.accuracy_score(y_test, y_pred)  # f_score, precision, recall
+
         print('-- accuracy: {}'.format(score))
         scores[fold] = score
 
@@ -66,3 +68,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# dataset - mniejszosciowa musi być pozytywna
+# zbiór : 5574 elementy, 747 spam, 4827 ham.
