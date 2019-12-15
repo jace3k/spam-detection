@@ -6,8 +6,11 @@ from sklearn import neighbors
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+
 # TODO: wilcoxon
 # https://github.com/w4k2/benchmark_datasets
+
 FEATURES = 5
 FOLDS = 5
 DATASET_PATH = 'datasets/spam_sms.csv'
@@ -19,6 +22,10 @@ def get_values_and_labels(ds):
 
 def preprocess_data(dataset):
     X, y = get_values_and_labels(dataset)
+
+    print('Transform labels..')
+    y = LabelEncoder().fit_transform(y)
+
     print('Dataset shape: {}'.format(X.shape))
     print('Vectorizing data..')
     vectorizer = TfidfVectorizer()
@@ -59,9 +66,9 @@ def predict(X, y, clf, k=6):
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
 
-        f1_score = metrics.f1_score(y_test, y_pred, pos_label='spam', average='binary')
-        precision = metrics.precision_score(y_test, y_pred, pos_label='spam')
-        recall = metrics.recall_score(y_test, y_pred, pos_label='spam')
+        f1_score = metrics.f1_score(y_test, y_pred)
+        precision = metrics.precision_score(y_test, y_pred)
+        recall = metrics.recall_score(y_test, y_pred)
 
         f1_scores.append(f1_score)
         precision_scores.append(precision)
